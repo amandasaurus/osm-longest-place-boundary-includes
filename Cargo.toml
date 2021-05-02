@@ -3,9 +3,10 @@ name = "x-in-y"
 version = "0.1.0"
 authors = ["Rory McCann <rory@technomancy.org>"]
 edition = "2018"
-license = "AGPL-3+"
+license = "AGPL-3.0-or-later"
 description = "Find long chains of 'place X in the bounday Y, place Y is in boundary Z' chains from OpenStreetMap"
 repository = "https://github.com/rory/osm-longest-place-boundary-includes"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

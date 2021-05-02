@@ -122,7 +122,7 @@ fn main() -> Result<()> {
     println!("{} version {} Affero GPL source code: {}",
              option_env!("CARGO_PKG_NAME").unwrap_or("NAME NOT SET"),
              option_env!("CARGO_PKG_VERSION").unwrap_or("VERSION NOT SET"),
-             option_env!("CARGO_PKG_REPOSITY").unwrap_or("SOURCE CODE REPO NOT SET"),
+             option_env!("CARGO_PKG_REPOSITORY").unwrap_or("SOURCE CODE REPO NOT SET"),
             );
 
     let input_filename = args().nth(1).expect("arg 1 should be csv filename");

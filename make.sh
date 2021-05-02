@@ -7,41 +7,44 @@ INPUTFILE=$(realpath "$INPUTFILE")
 OUTPUTDIR=${2:-.}
 cd "$OUTPUTDIR"
 
+PREFIX="$(basename "$INPUTFILE")"
+PREFIX="${PREFIX%%.osm.pbf}"
+
 #pyosmium-up-to-date -vv "$INPUTFILE" || true
 
-if [ "$INPUTFILE" -nt place.osm.pbf ] ; then
+if [ "$INPUTFILE" -nt ${PREFIX}.place.osm.pbf ] ; then
 	echo "Extracting place nodes..."
-	osmium tags-filter --overwrite "$INPUTFILE" -o place.osm.pbf n/place
+	osmium tags-filter --overwrite "$INPUTFILE" -o ${PREFIX}.place.osm.pbf n/place
 fi
 
-if [ "$INPUTFILE" -nt admin_level.osm.pbf ] ; then
+if [ "$INPUTFILE" -nt "${PREFIX}.admin_level.osm.pbf" ] ; then
 	echo "Extracting admin_levels..."
-	osmium tags-filter --overwrite "$INPUTFILE" -o admin_level.osm.pbf admin_level
+	osmium tags-filter --overwrite "$INPUTFILE" -o "${PREFIX}.admin_level.osm.pbf" admin_level
 fi
 
-if [ place.osm.pbf -nt .place_imported ] ; then
+if [ "${PREFIX}.place.osm.pbf" -nt ".${PREFIX}.place.imported" ] ; then
 	echo "Importing place nodes..."
-	osm2pgsql -l -S x-in-y.style --slim --drop -p place place.osm.pbf
+	osm2pgsql -l -S x-in-y.style --slim --drop -p place "${PREFIX}.place.osm.pbf"
 	for T in line polygon roads ; do
 		psql -c "drop table place_$T"
 	done
 	psql -c "create index place_point__place on place_point (place)"
 	psql -c "analyze place_point;"
-	touch .place_imported
+	touch ".${PREFIX}.place.imported"
 fi
 
-if [ admin_level.osm.pbf -nt .admin_level_imported ] ; then
+if [ "${PREFIX}.admin_level.osm.pbf" -nt ".${PREFIX}.admin_level.imported" ] ; then
 	echo "Importing admin_levels..."
-	osm2pgsql -l -S x-in-y.style --slim --drop -p admin_level admin_level.osm.pbf
+	osm2pgsql -l -S x-in-y.style --slim --drop -p admin_level "${PREFIX}.admin_level.osm.pbf"
 	for T in line point roads ; do
 		psql -c "drop table admin_level_$T"
 	done
 	psql -c "create index admin_level_polygon__admin_level on admin_level_polygon (admin_level)"
 	psql -c "analyze admin_level_polygon;"
-	touch .admin_level_imported
+	touch ".${PREFIX}.admin_level.imported"
 fi
 
-if [ .place_imported -nt place-in-area.csv.gz ] || [ .admin_level_imported -nt place-in-area.csv.gz ] || [ $0 -nt place-in-area.csv.gz ] ; then
+if [ ".${PREFIX}.place.osm.pbf" -nt "${PREFIX}.place-in-area.csv.gz" ] || [ ".${PREFIX}.admin_level.imported" -nt "${PREFIX}.place-in-area.csv.gz" ] || [ $0 -nt "${PREFIX}.place-in-area.csv.gz" ] ; then
 
 	psql -c "COPY (
 		select
@@ -65,12 +68,11 @@ if [ .place_imported -nt place-in-area.csv.gz ] || [ .admin_level_imported -nt p
 		) TO STDOUT WITH ( FORMAT CSV, HEADER )" \
 			| pv -l -N "calculating place/boundary combos" \
 			| gzip \
-			> place-in-area.csv.gz.tmp
+			> "${PREFIX}.place-in-area.csv.gz.tmp"
 
-	mv place-in-area.csv.gz.tmp place-in-area.csv.gz
-
+	mv "${PREFIX}.place-in-area.csv.gz.tmp" "${PREFIX}.place-in-area.csv.gz"
 
 fi
 
 cd $ROOT
-exec cargo +nightly run --release -- place-in-area.csv.gz distances.md
+exec cargo +nightly run --release -- "${PREFIX}.place-in-area.csv.gz" "${PREFIX}.distances.md"
