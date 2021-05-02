@@ -1,0 +1,10 @@
+*.osm.pbf
+.*.swp
+.place_imported
+.admin_level_imported
+*.csv
+*.csv.gz
+*.csv.gz.tmp
+*.db
+/distances.md
+/target

@@ -1,0 +1,4 @@
+node,way   admin_level  text         linear
+node,way   place  text         linear
+node,way   name         text         linear
+node,way   name:en         text         linear
